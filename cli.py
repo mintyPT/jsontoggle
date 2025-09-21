@@ -4,8 +4,12 @@ from textual.containers import Container
 from textual.widgets.tree import TreeNode
 from pathlib import Path
 
+import copy
+
 import click
 import sys
+
+import pydash as _
 
 from jsontoggle.jsontoggle_core import JsonToggleManager, create_demo_file
 
@@ -71,7 +75,7 @@ class JsonToggleApp(App):
         if event.node.data and 'path' in event.node.data:
             selected_path = event.node.data['path']
             path_parts = selected_path.split('.')  # Assuming '.' as delimiter
-            current_value = self.json_toggle_manager._get_json_node(self.json_data, path_parts)
+            current_value = _.get(self.json_data, path_parts)
             self.query_one("#node_value", Static).update(f"Selected Path: {selected_path}\nValue: {repr(current_value)}")
         else:
             self.query_one("#node_value", Static).update("Selected Node")
