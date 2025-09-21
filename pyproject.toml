@@ -2,6 +2,7 @@
 name = "jsontoggle"
 version = "0.1.0"
 dependencies = [
+    "pydash>=8.0.5",
     "textual>=6.1.0",
 ]
 
