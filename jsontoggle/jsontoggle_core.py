@@ -2,6 +2,7 @@ from pathlib import Path
 import json
 import os
 import copy
+import pydash as _
 
 class JsonToggleManager:
     def __init__(self, json_file_path: Path, toggles_dir: Path):
@@ -35,88 +36,16 @@ class JsonToggleManager:
         for toggle_file in self.toggles_dir.glob("*.json"):
             try:
                 # Extract path from filename
-                path_str = toggle_file.stem.replace('_', '.')
-                path_parts = path_str.split('.')
-
-                # Reconstruct list indices if present in filename
-                if any(part.isdigit() for part in toggle_file.stem.split('_')):
-                    reconstructed_path_parts = []
-                    current_segment = ""
-                    for part_segment in toggle_file.stem.split('_'):
-                        if part_segment.isdigit():
-                            if current_segment:
-                                reconstructed_path_parts.append(current_segment)
-                            reconstructed_path_parts.append(f"[{part_segment}]")
-                            current_segment = ""
-                        else:
-                            if current_segment:
-                                current_segment += "." + part_segment
-                            else:
-                                current_segment = part_segment
-                    if current_segment:
-                        reconstructed_path_parts.append(current_segment)
-                    # Join and split to handle cases like \'users[0].name\'
-                    path_parts = "".join(reconstructed_path_parts).replace("].", ".").split('.')
+                path_parts = toggle_file.stem.replace('__', '.').split('_')
 
                 with open(toggle_file, "r") as f:
                     original_value = json.load(f)
-                self._set_json_node(reverted_data, path_parts, original_value)
+                _.set_(reverted_data, path_parts, original_value)
             except Exception as e:
                 print(f"Warning: Could not revert toggle from {toggle_file.name}: {e}")
         return reverted_data
 
 
-    def _get_json_node(self, data, path_parts):
-        current_node = data
-        for part in path_parts:
-            if isinstance(current_node, dict):
-                current_node = current_node.get(part)
-            elif isinstance(current_node, list) and part.isdigit():
-                try:
-                    current_node = current_node[int(part)]
-                except IndexError:
-                    return None
-            else:
-                return None
-        return current_node
-
-    def _set_json_node(self, data, path_parts, value, remove_key: bool = False):
-        current_node = data
-        for i, part in enumerate(path_parts):
-            if i == len(path_parts) - 1:
-                if remove_key:
-                    if isinstance(current_node, dict) and part in current_node:
-                        del current_node[part]
-                        return True
-                    elif isinstance(current_node, list) and part.isdigit():
-                        try:
-                            del current_node[int(part)]
-                            return True
-                        except (IndexError, TypeError):
-                            pass
-                    return False
-                else:
-                    if isinstance(current_node, dict):
-                        current_node[part] = value
-                    elif isinstance(current_node, list) and part.isdigit():
-                        try:
-                            current_node[int(part)] = value
-                        except IndexError:
-                            pass
-                break
-            
-            if isinstance(current_node, dict):
-                if part not in current_node:
-                    return False  # Path not found
-                current_node = current_node[part]
-            elif isinstance(current_node, list) and part.isdigit():
-                idx = int(part)
-                if idx >= len(current_node):
-                    return False # Path not found
-                current_node = current_node[idx]
-            else:
-                return False # Path not found
-        return True
 
     def save_current_json(self):
         try:
@@ -127,9 +56,9 @@ class JsonToggleManager:
 
     def toggle_node(self, selected_path: str):
         path_parts = selected_path.split('.')
-        original_value = self._get_json_node(self.original_json_data, path_parts)
+        original_value = _.get(self.original_json_data, path_parts)
 
-        if original_value is None:
+        if original_value is None and not _.has(self.original_json_data, path_parts):
             raise ValueError(f"Cannot toggle: {selected_path} does not exist or is invalid.")
 
         toggle_file_name = f"{selected_path.replace('.', '_').replace('[', '_').replace(']', '')}.json"
@@ -141,7 +70,7 @@ class JsonToggleManager:
                 stored_value = json.load(f)
             
             # Update json_data with the stored original value
-            if self._set_json_node(self.json_data, path_parts, stored_value):
+            if _.set_(self.json_data, path_parts, stored_value):
                 toggle_file_path.unlink()  # Delete the toggle file
                 self.save_current_json()
                 return f"Reverted: {selected_path}"
@@ -153,7 +82,7 @@ class JsonToggleManager:
                 json.dump(original_value, f, indent=2)
             
             # Update json_data with the placeholder
-            if self._set_json_node(self.json_data, path_parts, None, remove_key=True): # Remove the key
+            if _.unset(self.json_data, path_parts): # Remove the key
                 self.save_current_json()
                 return f"Toggled out: {selected_path} (stored in {toggle_file_name})"
             else:
