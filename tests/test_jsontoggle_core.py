@@ -1,7 +1,8 @@
 import pytest
 import json
 from pathlib import Path
-from jsontoggle.jsontoggle_core import JsonToggleManager, DictListHelper
+from jsontoggle.jsontoggle_core import JsonToggleManager
+import pydash as _
 
 @pytest.fixture
 def demo_json_path(tmp_path: Path) -> Path:
@@ -60,26 +61,26 @@ def test_load_invalid_json_file(tmp_path: Path, toggles_dir: Path):
 
 def test_get_json_node(demo_json_path: Path, toggles_dir: Path):
     manager = JsonToggleManager(demo_json_path, toggles_dir)
-    assert DictListHelper.get(manager.json_data, ["featureFlags", "newDashboard"]) is True
-    assert DictListHelper.get(manager.json_data, ["settings", "theme"]) == "dark"
-    assert DictListHelper.get(manager.json_data, ["users", 0, "name"]) == "Alice"
-    assert DictListHelper.get(manager.json_data, ["nonExistent"]) is None
-    assert DictListHelper.get(manager.json_data, ["users", 10]) is None # Index out of bounds
+    assert _.get(manager.json_data, ["featureFlags", "newDashboard"]) is True
+    assert _.get(manager.json_data, ["settings", "theme"]) == "dark"
+    assert _.get(manager.json_data, ["users", 0, "name"]) == "Alice"
+    assert _.get(manager.json_data, ["nonExistent"]) is None
+    assert _.get(manager.json_data, ["users", 10]) is None # Index out of bounds
 
 def test_set_json_node(demo_json_path: Path, toggles_dir: Path):
     manager = JsonToggleManager(demo_json_path, toggles_dir)
     
     # Test setting a dict value
-    DictListHelper.set(manager.json_data, ["featureFlags", "darkMode"], True)
-    assert DictListHelper.get(manager.json_data, ["featureFlags", "darkMode"]) is True
+    _.set_(manager.json_data, ["featureFlags", "darkMode"], True)
+    assert _.get(manager.json_data, ["featureFlags", "darkMode"]) is True
 
     # Test setting a list value
-    DictListHelper.set(manager.json_data, ["users", 0, "name"], "Alicia")
-    assert DictListHelper.get(manager.json_data, ["users", 0, "name"]) == "Alicia"
+    _.set_(manager.json_data, ["users", 0, "name"], "Alicia")
+    assert _.get(manager.json_data, ["users", 0, "name"]) == "Alicia"
 
     # Test setting a non-existent path (should return False)
-    DictListHelper.set(manager.json_data, ["newRootKey", "subKey"], "value")
-    assert DictListHelper.get(manager.json_data, ["newRootKey", "subKey"]) == "value"
+    _.set_(manager.json_data, ["newRootKey", "subKey"], "value")
+    assert _.get(manager.json_data, ["newRootKey", "subKey"]) == "value"
 
 def test_toggle_node_out(demo_json_path: Path, toggles_dir: Path):
     manager = JsonToggleManager(demo_json_path, toggles_dir)
@@ -89,7 +90,7 @@ def test_toggle_node_out(demo_json_path: Path, toggles_dir: Path):
 
     # Toggle out
     manager.toggle_node(path_to_toggle)
-    assert DictListHelper.get(manager.json_data, path_to_toggle.split('.')) is None
+    assert _.get(manager.json_data, path_to_toggle.split('.')) is None
     assert toggle_file_path.exists()
     with open(toggle_file_path, "r") as f:
         stored_value = json.load(f)
@@ -111,7 +112,7 @@ def test_toggle_node_in(demo_json_path: Path, toggles_dir: Path):
     
     # Then, toggle it back in
     manager.toggle_node(path_to_toggle)
-    assert DictListHelper.get(manager.json_data, path_to_toggle.split('.')) is True
+    assert _.get(manager.json_data, path_to_toggle.split('.')) is True
     assert not toggle_file_path.exists()
 
     # Verify original file on disk is updated
