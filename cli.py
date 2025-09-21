@@ -3,7 +3,7 @@ from textual.widgets import Header, Footer, Static, Tree
 from textual.containers import Container
 from textual.widgets.tree import TreeNode
 from pathlib import Path
-import json
+
 import click
 import sys
 
@@ -80,7 +80,6 @@ class JsonToggleApp(App):
         tree = self.query_one("#json_tree", Tree)
         if tree.cursor_node and tree.cursor_node.data and 'path' in tree.cursor_node.data:
             selected_path = tree.cursor_node.data['path']
-            path_parts = selected_path.split('.')
             try:
                 message = self.json_toggle_manager.toggle_node(selected_path)
                 self.query_one("#node_value", Static).update(message)
@@ -95,32 +94,7 @@ class JsonToggleApp(App):
 
 
 
-def create_demo_file(file_name="demo.json"):
-    demo_content = {
-        "featureFlags": {
-            "newDashboard": True,
-            "darkMode": False,
-            "experimentalSearch": {
-                "enabled": True,
-                "version": 2
-            }
-        },
-        "settings": {
-            "theme": "dark",
-            "notifications": {
-                "email": True,
-                "sms": False
-            }
-        },
-        "users": [
-            {"id": 1, "name": "Alice"},
-            {"id": 2, "name": "Bob"}
-        ]
-    }
-    demo_file_path = Path(file_name)
-    with open(demo_file_path, "w") as f:
-        json.dump(demo_content, f, indent=2)
-    return demo_file_path
+
 
 
 @click.group()

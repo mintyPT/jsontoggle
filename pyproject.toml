@@ -1,6 +1,9 @@
 [project]
 name = "jsontoggle"
 version = "0.1.0"
+dependencies = [
+    "textual>=6.1.0",
+]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

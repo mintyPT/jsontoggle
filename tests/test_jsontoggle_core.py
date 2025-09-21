@@ -1,7 +1,7 @@
 import pytest
 import json
 from pathlib import Path
-from jsontoggle.jsontoggle_core import JsonToggleManager, create_demo_file
+from jsontoggle.jsontoggle_core import JsonToggleManager
 
 @pytest.fixture
 def demo_json_path(tmp_path: Path) -> Path:
@@ -88,7 +88,7 @@ def test_toggle_node_out(demo_json_path: Path, toggles_dir: Path):
 
     # Toggle out
     manager.toggle_node(path_to_toggle)
-    assert manager._get_json_node(manager.json_data, path_to_toggle.split('.')) == "__TOGGLED__"
+    assert manager._get_json_node(manager.json_data, path_to_toggle.split('.')) is None
     assert toggle_file_path.exists()
     with open(toggle_file_path, "r") as f:
         stored_value = json.load(f)
@@ -97,7 +97,7 @@ def test_toggle_node_out(demo_json_path: Path, toggles_dir: Path):
     # Verify original file on disk is updated
     with open(demo_json_path, "r") as f:
         on_disk_data = json.load(f)
-    assert on_disk_data["featureFlags"]["newDashboard"] == "__TOGGLED__"
+    assert "newDashboard" not in on_disk_data["featureFlags"]
 
 def test_toggle_node_in(demo_json_path: Path, toggles_dir: Path):
     manager = JsonToggleManager(demo_json_path, toggles_dir)
@@ -131,7 +131,7 @@ def test_load_current_json_with_toggled_value(demo_json_path: Path, toggles_dir:
     
     # Now, initialize a new manager and ensure it loads the toggled state
     manager2 = JsonToggleManager(demo_json_path, toggles_dir)
-    assert manager2.json_data["featureFlags"]["newDashboard"] == "__TOGGLED__"
+    assert "newDashboard" not in manager2.json_data["featureFlags"]
     assert manager2.original_json_data["featureFlags"]["newDashboard"] is True
 
 def test_save_current_json(demo_json_path: Path, toggles_dir: Path):

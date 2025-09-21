@@ -80,17 +80,29 @@ class JsonToggleManager:
                 return None
         return current_node
 
-    def _set_json_node(self, data, path_parts, value):
+    def _set_json_node(self, data, path_parts, value, remove_key: bool = False):
         current_node = data
         for i, part in enumerate(path_parts):
             if i == len(path_parts) - 1:
-                if isinstance(current_node, dict):
-                    current_node[part] = value
-                elif isinstance(current_node, list) and part.isdigit():
-                    try:
-                        current_node[int(part)] = value
-                    except IndexError:
-                        pass
+                if remove_key:
+                    if isinstance(current_node, dict) and part in current_node:
+                        del current_node[part]
+                        return True
+                    elif isinstance(current_node, list) and part.isdigit():
+                        try:
+                            del current_node[int(part)]
+                            return True
+                        except (IndexError, TypeError):
+                            pass
+                    return False
+                else:
+                    if isinstance(current_node, dict):
+                        current_node[part] = value
+                    elif isinstance(current_node, list) and part.isdigit():
+                        try:
+                            current_node[int(part)] = value
+                        except IndexError:
+                            pass
                 break
             
             if isinstance(current_node, dict):
@@ -141,7 +153,7 @@ class JsonToggleManager:
                 json.dump(original_value, f, indent=2)
             
             # Update json_data with the placeholder
-            if self._set_json_node(self.json_data, path_parts, "__TOGGLED__"): # Use a placeholder
+            if self._set_json_node(self.json_data, path_parts, None, remove_key=True): # Remove the key
                 self.save_current_json()
                 return f"Toggled out: {selected_path} (stored in {toggle_file_name})"
             else:
