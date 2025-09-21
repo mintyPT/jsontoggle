@@ -1,0 +1,27 @@
+{
+  "featureFlags": {
+    "newDashboard": true,
+    "darkMode": false,
+    "experimentalSearch": {
+      "enabled": true,
+      "version": 2
+    }
+  },
+  "settings": {
+    "theme": "dark",
+    "notifications": {
+      "email": true,
+      "sms": false
+    }
+  },
+  "users": [
+    {
+      "id": 1,
+      "name": "Alice"
+    },
+    {
+      "id": 2,
+      "name": "Bob"
+    }
+  ]
+}
