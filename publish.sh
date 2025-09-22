@@ -45,10 +45,3 @@ uv publish
 
 echo "Successfully published version $new_version to PyPI."
 
-# Git commands to commit and push the version bump
-echo "Committing and pushing version bump..."
-git config user.name "github-actions[bot]"
-git config user.email "github-actions[bot]@users.noreply.github.com"
-git add pyproject.toml
-git commit -m "Bump version to $new_version"
-git push
