@@ -22,13 +22,57 @@ jobs:
 
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
-        
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x' # Or a specific version like '3.11'
 
-      - name: Run publish script
+      - name: Install toml-cli
+        run: pip install toml-cli
+
+      - name: Determine and Set New Version
+        id: set_version
+        run: |
+          current_version=$(toml get --toml-path pyproject.toml project.version)
+
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+              new_version="${{ github.event.inputs.version }}"
+              echo "Using manually provided version: $new_version"
+          else
+              IFS='.' read -r major minor patch <<< "$current_version"
+              new_patch=$((patch + 1))
+              new_version="$major.$minor.$new_patch"
+              echo "Bumping patch version from $current_version to $new_version"
+          fi
+
+          toml set --toml-path pyproject.toml project.version "$new_version"
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+
+          echo "--- pyproject.toml content after version bump ---"
+          cat pyproject.toml
+          echo "--------------------------------------------------"
+
+      - name: Clean up old build artifacts and metadata
+        run: |
+          rm -rf dist/*
+          rm -rf build/*
+          rm -rf jsontoggle.egg-info/
+          rm -rf .mypy_cache/
+          rm -rf .ruff_cache/
+
+      - name: Build package
+        run: uv build
+
+      - name: Publish package
         env:
           UV_PUBLISH_TOKEN: ${{ secrets.PYPI_API_TOKEN }} # Only if not using Trusted Publishers
-        run: bash ./publish.sh ${{ github.event.inputs.version }}
+        run: uv publish
+
+      - name: Commit and Push Version Bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pyproject.toml
+          git commit -m "Bump version to ${{ steps.set_version.outputs.new_version }}"
+          git push
