@@ -12,14 +12,19 @@ fi
 # Get the current version from pyproject.toml
 current_version=$(toml get --toml-path pyproject.toml project.version)
 
-# Split the version into major, minor, and patch
-IFS='.' read -r major minor patch <<< "$current_version"
+# Determine the new version
+if [ -n "$1" ]; then
+    new_version="$1"
+    echo "Using manually provided version: $new_version"
+else
+    # Split the version into major, minor, and patch
+    IFS='.' read -r major minor patch <<< "$current_version"
 
-# Increment the patch version
-new_patch=$((patch + 1))
-new_version="$major.$minor.$new_patch"
-
-echo "Bumping version from $current_version to $new_version"
+    # Increment the patch version
+    new_patch=$((patch + 1))
+    new_version="$major.$minor.$new_patch"
+    echo "Bumping patch version from $current_version to $new_version"
+fi
 
 # Update the version in pyproject.toml using toml-cli
 toml set --toml-path pyproject.toml project.version "$new_version"
@@ -44,4 +49,3 @@ echo "Publishing package with uv publish..."
 uv publish
 
 echo "Successfully published version $new_version to PyPI."
-

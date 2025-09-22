@@ -2,6 +2,11 @@ name: Publish Python Package
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Specify a version manually (e.g., 1.2.3). If left empty, patch version will be automatically bumped.'
+        required: false
+        type: string
 
 jobs:
   publish:
@@ -26,4 +31,4 @@ jobs:
       - name: Run publish script
         env:
           UV_PUBLISH_TOKEN: ${{ secrets.PYPI_API_TOKEN }} # Only if not using Trusted Publishers
-        run: bash ./publish.sh # Call bash directly, as uv is installed globally
+        run: bash ./publish.sh ${{ github.event.inputs.version }}
