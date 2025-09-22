@@ -25,5 +25,8 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
+      - name: List virtual environment contents
+        run: ls -F ./.venv/bin
+
       - name: Run tests
         run: ./.venv/bin/pytest
