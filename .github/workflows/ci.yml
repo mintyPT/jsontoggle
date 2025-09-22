@@ -22,8 +22,11 @@ jobs:
         with:
           python-version: '3.x' # Or a specific version like '3.11'
 
-      - name: Install dependencies
-        run: uv sync --with-requirements requirements.txt
+      - name: Install production dependencies
+        run: uv sync
+
+      - name: Install test dependencies
+        run: uv pip install -r requirements.txt
 
       - name: List virtual environment contents
         run: ls -F ./.venv/bin
