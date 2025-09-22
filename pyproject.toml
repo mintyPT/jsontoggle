@@ -1,10 +1,24 @@
 [project]
 name = "jsontoggle"
 version = "0.1.0"
+authors = [
+    { name="Crush", email="crush@charm.land" },
+]
+description = "A CLI tool for toggling JSON nodes."
+readme = "README.md"
+requires-python = ">=3.8"
 dependencies = [
     "pydash>=8.0.5",
-    "textual>=6.1.0",
+    "textual>=0.61.0",
+    "click>=8.1.7",
 ]
+
+[project.scripts]
+jsontoggle = "cli:cli"
+
+
+[tool.setuptools]
+packages = ["jsontoggle"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

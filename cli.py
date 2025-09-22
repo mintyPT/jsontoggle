@@ -14,15 +14,17 @@ import pydash as _
 from jsontoggle.jsontoggle_core import JsonToggleManager, create_demo_file
 
 class JsonTree(Tree):
-    def __init__(self, name: str, data: dict | list, path: str = "", **kwargs) -> None:
+    def __init__(self, name: str, data: dict | list, toggled_paths: list[str] = None, path: str = "", **kwargs) -> None:
         super().__init__(name, **kwargs)
         self.data = data
         self.path = path
+        self.toggled_paths = toggled_paths if toggled_paths is not None else []
         self.show_root = False
         self.guide_depth = 3
 
     def on_mount(self) -> None:
         self.load_json(self.data, self.root)
+        self._load_toggled_nodes(self.root)
 
     def load_json(self, data, node: TreeNode, path: str = "") -> None:
         if isinstance(data, dict):
@@ -41,6 +43,24 @@ class JsonTree(Tree):
                     self.load_json(value, new_node, new_path)
                 else:
                     node.add_leaf(f"{i}: {repr(value)}", data={'path': new_path, 'value': value})
+
+    def _load_toggled_nodes(self, node: TreeNode) -> None:
+        """
+        Add toggled-out nodes to the tree if they are not already present in json_data.
+        This ensures that users can select and toggle them back in.
+        """
+        for toggled_path in self.toggled_paths:
+            path_parts = toggled_path.split('.')
+            # Check if this toggled path already exists in the current JSON data
+            if _.get(self.data, path_parts) is None:
+                # If not, add a placeholder node to the tree
+                # This is a simplified approach; a more robust solution might reconstruct the full path
+                # and insert the node at the correct hierarchical position.
+                # For now, we'll add it at the root or under the closest existing parent.
+                # This assumes selected_path is a direct key-value pair, not a nested structure
+                # that was fully removed. More complex _.unset scenarios would need deeper logic.
+                # We'll just show the toggled path as a leaf for now for simplicity.
+                node.add_leaf(f"{toggled_path} (Toggled out)", data={'path': toggled_path, 'value': "(Toggled out)"})
 
 class JsonToggleApp(App):
     BINDINGS = [

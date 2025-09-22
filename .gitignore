@@ -1,1 +1,5 @@
 *.pyc
+toggles
+ex.json
+jsontoggle.egg-info
+dist

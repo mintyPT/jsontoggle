@@ -49,6 +49,14 @@ class JsonToggleManager:
 
 
 
+    def get_toggled_paths(self) -> list[str]:
+        toggled_paths = []
+        for toggle_file in self.toggles_dir.glob("*.json"):
+            # Reconstruct the original path from the filename
+            path_parts_from_filename = toggle_file.stem.replace('__', '.').split('_')
+            toggled_paths.append(".".join(path_parts_from_filename))
+        return toggled_paths
+
     def save_current_json(self):
         try:
             with open(self.json_file_path, "w") as f:
